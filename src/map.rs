@@ -83,7 +83,7 @@ impl Map {
         None
     }
 
-    fn get_neighbors(&self, point: Point) -> Vec<Point> {
+    pub fn get_neighbors(&self, point: Point) -> Vec<Point> {
         let mut neighbors = Vec::new();
         let directions = [(-1, 0), (1, 0), (0, -1), (0, 1)];
 

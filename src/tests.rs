@@ -2,6 +2,7 @@
 mod tests {
     use crate::map::Map;
     use crate::map::Cell;
+    use crate::map::Point;
 
     #[test]
     fn test_parse_map() {
@@ -46,10 +47,31 @@ mod tests {
         let mut map = Map::parse_from_string(input).unwrap();
         
         let found_path = map.find_and_mark_path();
-
         assert!(found_path == true);
-        assert!(map.grid[2][0] == Cell::Path);
-        assert!(map.grid[2][1] == Cell::Path);
-        assert!(map.grid[2][2] == Cell::Path);
+        assert!(go_path(&map, map.start, None));
+    }
+
+    fn go_path(map: &Map, current_point: Point, prev_point: Option<Point>) -> bool {
+        let neigbours = map.get_neighbors(current_point);
+        if map.grid[current_point.row][current_point.col] == Cell::End {
+            return true;
+        }
+
+        for n in &neigbours {
+        
+            if map.grid[n.row][n.col] != Cell::Path && map.grid[n.row][n.col] != Cell::End {
+                continue;
+            }
+
+            if Some(*n) == prev_point {
+                continue;
+            }
+            
+            if go_path(map, *n, Some(current_point)) {
+                return true;
+            }
+        }
+        false
     }
 }
+
