@@ -1,29 +1,27 @@
-use crate::map::{Map, Cell};
+use std::fmt;
+
+use crate::map::{Cell, Map};
 
 impl Cell {
-    fn to_char(&self) -> char {
+    fn to_char(self) -> char {
         match self {
             Cell::Empty => ' ',
             Cell::Start => 'i',
             Cell::End => 'O',
             Cell::Wall => '#',
-            Cell::Path => '.'
+            Cell::Path => '.',
         }
-    }   
+    }
 }
 
-impl Map {
-    pub fn to_string(&self) -> String {
-        let mut result = String::new();
-
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                let ch = self.grid[row][col].to_char();
-                result.push(ch);
+impl fmt::Display for Map {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row in &self.grid {
+            for cell in row {
+                write!(f, "{}", cell.to_char())?;
             }
-            result.push('\n');
+            writeln!(f)?;
         }
-
-        result
+        Ok(())
     }
 }

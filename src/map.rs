@@ -41,7 +41,7 @@ impl Map {
                 self.mark_path(&path);
                 true
             }
-            None => false
+            None => false,
         }
     }
 
@@ -71,7 +71,7 @@ impl Map {
                 return Some(path);
             }
 
-            for neighbor in self.get_neighbors(current) {
+            for neighbor in self.get_neighbors_safe(current) {
                 if !visited[neighbor.row][neighbor.col] {
                     visited[neighbor.row][neighbor.col] = true;
                     parent[neighbor.row][neighbor.col] = Some(current);
@@ -83,21 +83,21 @@ impl Map {
         None
     }
 
-    pub fn get_neighbors(&self, point: Point) -> Vec<Point> {
-        let mut neighbors = Vec::new();
-        let directions = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+    // pub fn get_neighbors(&self, point: Point) -> Vec<Point> {
+    //     let mut neighbors = Vec::new();
+    //     let directions = [(-1, 0), (1, 0), (0, -1), (0, 1)];
 
-        for (dr, dc) in directions.iter() {
-            let new_row = (point.row as isize + dr).rem_euclid(self.rows as isize) as usize;
-            let new_col = (point.col as isize + dc).rem_euclid(self.cols as isize) as usize;
+    //     for (dr, dc) in directions.iter() {
+    //         let new_row = (point.row as isize + dr).rem_euclid(self.rows as isize) as usize;
+    //         let new_col = (point.col as isize + dc).rem_euclid(self.cols as isize) as usize;
 
-            if self.grid[new_row][new_col] != Cell::Wall {
-                neighbors.push(Point { row: new_row, col: new_col });
-            }
-        }
+    //         if self.grid[new_row][new_col] != Cell::Wall {
+    //             neighbors.push(Point { row: new_row, col: new_col });
+    //         }
+    //     }
 
-        neighbors
-    }
+    //     neighbors
+    // }
 
     fn mark_path(&mut self, path: &[Point]) {
         for point in path {
@@ -105,5 +105,41 @@ impl Map {
                 self.grid[point.row][point.col] = Cell::Path;
             }
         }
+    }
+
+    pub fn get_neighbors_safe(&self, point: Point) -> Vec<Point> {
+        let mut neighbors = Vec::new();
+        let directions = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+
+        for (dr, dc) in directions.iter() {
+            // Преобразуем usize в isize для арифметических операций
+            let row_isize: isize = point.row.try_into().unwrap_or(0);
+            let col_isize: isize = point.col.try_into().unwrap_or(0);
+            let rows_isize: isize = self.rows.try_into().unwrap_or(0);
+            let cols_isize: isize = self.cols.try_into().unwrap_or(0);
+
+            let new_row = (row_isize + dr).rem_euclid(rows_isize);
+            let new_col = (col_isize + dc).rem_euclid(cols_isize);
+
+            // Проверяем, что координаты неотрицательны и могут быть преобразованы в usize
+            if new_row >= 0 && new_col >= 0 {
+                // Преобразуем обратно в usize с проверкой
+                if let Ok(new_row_usize) = usize::try_from(new_row) {
+                    if let Ok(new_col_usize) = usize::try_from(new_col) {
+                        // Проверяем, что координаты в пределах сетки
+                        if new_row_usize < self.rows
+                            && new_col_usize < self.cols
+                            && self.grid[new_row_usize][new_col_usize] != Cell::Wall
+                        {
+                            neighbors.push(Point {
+                                row: new_row_usize,
+                                col: new_col_usize,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        neighbors
     }
 }

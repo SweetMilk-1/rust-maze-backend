@@ -1,24 +1,31 @@
-use crate::map::{Map, Point, Cell};
+use std::str::FromStr;
+
+use crate::map::{Cell, Map, Point};
 
 impl Cell {
     fn from_char(ch: char) -> Result<Self, String> {
         match ch {
-             ' ' => Ok(Cell::Empty),
-             'i' => Ok(Cell::Start),
-             'O' => Ok(Cell::End),
-             '#' => Ok(Cell::Wall),
-             '.' => Ok(Cell::Path),
-             _ => Err(format!("Unknown symbol: {}", ch))
+            ' ' => Ok(Cell::Empty),
+            'i' => Ok(Cell::Start),
+            'O' => Ok(Cell::End),
+            '#' => Ok(Cell::Wall),
+            '.' => Ok(Cell::Path),
+            _ => Err(format!("Unknown symbol: {}", ch)),
         }
-    }  
+    }
 }
 
-impl Map {
-    pub fn parse_from_string(map_string: String) -> Result<Map, String> {
-        let lines: Vec<&str> = map_string.lines().collect();
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParsePointError;
+
+impl FromStr for Map {
+    type Err = ParsePointError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let lines: Vec<&str> = s.lines().collect();
 
         if lines.is_empty() {
-            return Err("Пустой ввод".to_string());
+            return Err(ParsePointError);
         }
 
         let mut map = Map::new();
@@ -28,7 +35,7 @@ impl Map {
         for (row, line) in lines.iter().enumerate() {
             let mut row_vec = Vec::with_capacity(map.cols);
             for (col, ch) in line.chars().enumerate() {
-                let mut cell = Cell::from_char(ch)?;
+                let mut cell = Cell::from_char(ch).map_err(|_| ParsePointError)?;
                 match cell {
                     Cell::Start => map.start = Point { row, col },
                     Cell::End => map.end = Point { row, col },
