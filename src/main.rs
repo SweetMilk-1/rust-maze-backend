@@ -14,10 +14,12 @@ use std::{
 fn main() {
     let stdin = io::stdin();
     let input = stdin.lock().lines().collect::<Result<Vec<String>, _>>();
+    
     if let Ok(lines) = input {
-        let aggr_string = lines.join("\n");
-        let map = Map::from_str(&aggr_string);
-        match map {
+        let combined_input = lines.join("\n");
+        let map_result = Map::from_str(&combined_input);
+        
+        match map_result {
             Ok(mut map) => {
                 map.find_and_mark_path();
                 println!("{}", map);
