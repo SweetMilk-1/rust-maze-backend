@@ -1,16 +1,13 @@
 use std::str::FromStr;
 
-use crate::map::{Cell, Map, Point};
+use crate::map::{Cell, Map};
 
 impl Cell {
     fn from_char(ch: char) -> Result<Self, String> {
         match ch {
             ' ' => Ok(Cell::Empty),
-            'i' => Ok(Cell::Start),
-            'O' => Ok(Cell::End),
             '#' => Ok(Cell::Wall),
-            '.' => Ok(Cell::Path),
-            _ => Err(format!("Unknown symbol: {}", ch)),
+            _ => Err(format!("Illegal symbol: {}", ch)),
         }
     }
 }
@@ -29,25 +26,23 @@ impl FromStr for Map {
         }
 
         let mut map = Map::new();
-        map.rows = lines.len();
-        map.cols = lines.iter().map(|line| line.len()).max().unwrap_or(0);
 
-        for (row, line) in lines.iter().enumerate() {
+        map.rows = lines.len();
+        map.cols = lines[0].len();
+
+        for line in lines.iter() {
+            if  line.len() != map.cols {
+                return Err(ParsePointError); 
+            }
+
             let mut row_vec = Vec::with_capacity(map.cols);
-            for (col, ch) in line.chars().enumerate() {
-                let mut cell = Cell::from_char(ch).map_err(|_| ParsePointError)?;
-                match cell {
-                    Cell::Start => map.start = Point { row, col },
-                    Cell::End => map.end = Point { row, col },
-                    Cell::Path => cell = Cell::Empty,
-                    _ => {}
-                }
+
+            for ch in line.chars() {
+                let cell = Cell::from_char(ch)
+                    .map_err(|_| ParsePointError)?;
                 row_vec.push(cell);
             }
 
-            while row_vec.len() < map.cols {
-                row_vec.push(Cell::Empty);
-            }
             map.grid.push(row_vec);
         }
 
