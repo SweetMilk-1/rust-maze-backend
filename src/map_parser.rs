@@ -3,7 +3,7 @@ use std::str::FromStr;
 use crate::map::{Cell, Map};
 
 impl Cell {
-    fn from_char(ch: char) -> Result<Self, String> {
+    pub fn from_char(ch: char) -> Result<Self, String> {
         match ch {
             ' ' => Ok(Cell::Empty),
             '#' => Ok(Cell::Wall),
@@ -31,15 +31,14 @@ impl FromStr for Map {
         map.cols = lines[0].len();
 
         for line in lines.iter() {
-            if  line.len() != map.cols {
-                return Err(ParsePointError); 
+            if line.len() != map.cols {
+                return Err(ParsePointError);
             }
 
             let mut row_vec = Vec::with_capacity(map.cols);
 
             for ch in line.chars() {
-                let cell = Cell::from_char(ch)
-                    .map_err(|_| ParsePointError)?;
+                let cell = Cell::from_char(ch).map_err(|_| ParsePointError)?;
                 row_vec.push(cell);
             }
 

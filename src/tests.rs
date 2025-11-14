@@ -16,7 +16,7 @@ mod tests {
         let point1 = Point { x: 1, y: 2 };
         let point2 = Point { x: 1, y: 2 };
         let point3 = Point { x: 3, y: 4 };
-        
+
         assert_eq!(point1, point2);
         assert_ne!(point1, point3);
     }
@@ -33,7 +33,7 @@ mod tests {
     fn test_map_parsing_valid() {
         let input = "# #\n # ";
         let map = Map::from_str(input).unwrap();
-        
+
         assert_eq!(map.rows, 2);
         assert_eq!(map.cols, 3);
         assert_eq!(map.grid[0][0], Cell::Wall);
@@ -74,17 +74,19 @@ mod tests {
         map.rows = 3;
         map.cols = 3;
         map.grid = vec![vec![Cell::Empty; 3]; 3];
-        
+
         let start = Point { x: 0, y: 0 };
         let end = Point { x: 2, y: 2 };
-        
+
         let result = map.find_and_mark_path(start, end);
         assert!(result);
-        
+
         assert_eq!(map.grid[0][0], Cell::Start);
         assert_eq!(map.grid[2][2], Cell::End);
         // At least one path cell should be marked
-        let path_cells_count = map.grid.iter()
+        let path_cells_count = map
+            .grid
+            .iter()
             .flat_map(|row| row.iter())
             .filter(|&&cell| cell == Cell::Path)
             .count();
@@ -99,13 +101,13 @@ mod tests {
         map.grid = vec![vec![Cell::Wall; 3]; 3];
         map.grid[0][0] = Cell::Empty;
         map.grid[2][2] = Cell::Empty;
-        
+
         let start = Point { x: 0, y: 0 };
         let end = Point { x: 2, y: 2 };
-        
+
         let result = map.find_and_mark_path(start, end);
         assert!(!result);
-        
+
         // Grid should remain unchanged
         assert_eq!(map.grid[0][0], Cell::Empty);
         assert_eq!(map.grid[2][2], Cell::Empty);
@@ -116,11 +118,8 @@ mod tests {
         let mut map = Map::new();
         map.rows = 2;
         map.cols = 2;
-        map.grid = vec![
-            vec![Cell::Wall, Cell::Empty],
-            vec![Cell::Empty, Cell::Wall],
-        ];
-        
+        map.grid = vec![vec![Cell::Wall, Cell::Empty], vec![Cell::Empty, Cell::Wall]];
+
         let display_output = format!("{}", map);
         let expected = "# \n #\n";
         assert_eq!(display_output, expected);
@@ -131,11 +130,8 @@ mod tests {
         let mut map = Map::new();
         map.rows = 2;
         map.cols = 2;
-        map.grid = vec![
-            vec![Cell::Start, Cell::Path],
-            vec![Cell::Path, Cell::End],
-        ];
-        
+        map.grid = vec![vec![Cell::Start, Cell::Path], vec![Cell::Path, Cell::End]];
+
         let display_output = format!("{}", map);
         let expected = "i.\n.O\n";
         assert_eq!(display_output, expected);
@@ -146,13 +142,13 @@ mod tests {
         // Create a more complex maze
         let input = "# # #\n     \n# # #";
         let mut map = Map::from_str(input).unwrap();
-        
+
         let start = Point { x: 0, y: 1 };
         let end = Point { x: 2, y: 1 };
-        
+
         let result = map.find_and_mark_path(start, end);
         assert!(result);
-        
+
         // Verify start and end are marked
         assert_eq!(map.grid[0][1], Cell::Start);
         assert_eq!(map.grid[2][1], Cell::End);

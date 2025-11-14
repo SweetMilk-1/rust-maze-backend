@@ -3,7 +3,7 @@ use std::fmt;
 use crate::map::{Cell, Map};
 
 impl Cell {
-    fn to_char(self) -> char {
+    pub fn to_char(self) -> char {
         match self {
             Cell::Empty => ' ',
             Cell::Start => 'i',
