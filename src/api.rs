@@ -181,40 +181,21 @@ async fn solve_map(
     let start: Point = payload.start.into();
     let end: Point = payload.end.into();
 
-    // Validate coordinates
-    if start.x >= map_clone.rows || start.y >= map_clone.cols {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            Json(ErrorResponse {
-                error: "Invalid start coordinates".to_string(),
-            }),
-        ));
-    }
-
-    if end.x >= map_clone.rows || end.y >= map_clone.cols {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            Json(ErrorResponse {
-                error: "Invalid end coordinates".to_string(),
-            }),
-        ));
-    }
-
     // Check if start and end are not walls
-    if map_clone.grid[start.x][start.y] == crate::map::Cell::Wall {
+    if !map_clone.validate_coordinates(start) {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
-                error: "Start position cannot be a wall".to_string(),
+                error: "Start position  is invalid".to_string(),
             }),
         ));
     }
 
-    if map_clone.grid[end.x][end.y] == crate::map::Cell::Wall {
+    if !map_clone.validate_coordinates(end)  {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
-                error: "End position cannot be a wall".to_string(),
+                error: "End position is invalid".to_string(),
             }),
         ));
     }

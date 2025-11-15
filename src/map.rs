@@ -31,6 +31,10 @@ impl Map {
         }
     }
 
+    pub fn validate_coordinates(&self, point: Point) -> bool {
+        point.x < self.rows && point.y < self.cols && self.grid[point.x][point.y] != Cell::Wall
+    }
+
     pub fn find_and_mark_path(&mut self, start: Point, finish: Point) -> bool {
         let path = self.find_path(start, finish);
         match path {
@@ -127,3 +131,4 @@ impl Map {
         neighbors
     }
 }
+
