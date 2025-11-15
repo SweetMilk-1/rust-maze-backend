@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::Json,
     routing::{delete, get, post},
@@ -8,7 +8,8 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::map::{Map, Point};
@@ -43,9 +44,11 @@ pub struct MapResponse {
 }
 
 #[derive(Deserialize)]
-pub struct SolveRequest {
-    pub start: PointDto,
-    pub end: PointDto,
+pub struct SolveQuery {
+    pub start_x: usize,
+    pub start_y: usize,
+    pub finish_x: usize,
+    pub finish_y: usize,
 }
 
 #[derive(Serialize)]
@@ -66,6 +69,21 @@ impl From<PointDto> for Point {
     }
 }
 
+impl From<SolveQuery> for (Point, Point) {
+    fn from(query: SolveQuery) -> Self {
+        (
+            Point {
+                x: query.start_x,
+                y: query.start_y,
+            },
+            Point {
+                x: query.finish_x,
+                y: query.finish_y,
+            },
+        )
+    }
+}
+
 // API Routes
 pub fn create_api_router(map_store: MapStore) -> Router {
     Router::new()
@@ -73,7 +91,7 @@ pub fn create_api_router(map_store: MapStore) -> Router {
         .route(&format!("/{}/maps", API_VERSION), get(list_maps))
         .route(&format!("/{}/maps/:id", API_VERSION), get(get_map))
         .route(&format!("/{}/maps/:id", API_VERSION), delete(delete_map))
-        .route(&format!("/{}/maps/:id/solve", API_VERSION), post(solve_map))
+        .route(&format!("/{}/maps/:id/solve", API_VERSION), get(solve_map)) //TODO: переписать на GET
         .with_state(map_store)
 }
 
@@ -95,7 +113,7 @@ async fn create_map(
     let id = Uuid::new_v4();
 
     // Store the map
-    map_store.write().unwrap().insert(id, map);
+    map_store.write().await.insert(id, map); //TODO: переделть
 
     Ok(Json(ApiResponse {
         data: MapResponse {
@@ -108,7 +126,7 @@ async fn create_map(
 async fn list_maps(
     State(map_store): State<MapStore>,
 ) -> Result<Json<ApiResponse<Vec<MapResponse>>>, (StatusCode, Json<ErrorResponse>)> {
-    let maps = map_store.read().unwrap();
+    let maps = map_store.read().await;
     let response: Vec<MapResponse> = maps
         .iter()
         .map(|(id, map)| MapResponse {
@@ -124,7 +142,7 @@ async fn get_map(
     Path(id): Path<Uuid>,
     State(map_store): State<MapStore>,
 ) -> Result<Json<ApiResponse<MapResponse>>, (StatusCode, Json<ErrorResponse>)> {
-    let maps = map_store.read().unwrap();
+    let maps = map_store.read().await;
     let map = maps.get(&id).ok_or_else(|| {
         (
             StatusCode::NOT_FOUND,
@@ -146,7 +164,7 @@ async fn delete_map(
     Path(id): Path<Uuid>,
     State(map_store): State<MapStore>,
 ) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
-    let mut maps = map_store.write().unwrap();
+    let mut maps = map_store.write().await;
 
     if maps.remove(&id).is_some() {
         Ok(StatusCode::NO_CONTENT)
@@ -162,24 +180,24 @@ async fn delete_map(
 
 async fn solve_map(
     Path(id): Path<Uuid>,
+    Query(params): Query<SolveQuery>,
     State(map_store): State<MapStore>,
-    Json(payload): Json<SolveRequest>,
 ) -> Result<Json<ApiResponse<SolveResponse>>, (StatusCode, Json<ErrorResponse>)> {
-    let mut maps = map_store.write().unwrap();
-    let map = maps.get_mut(&id).ok_or_else(|| {
-        (
-            StatusCode::NOT_FOUND,
-            Json(ErrorResponse {
-                error: "Map not found".to_string(),
-            }),
-        )
-    })?;
-
     // Create a clone to work with
-    let mut map_clone = map.clone();
+    let mut map_clone = {
+        let mut maps = map_store.write().await;
+        let map = maps.get_mut(&id).ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                Json(ErrorResponse {
+                    error: "Map not found".to_string(),
+                }),
+            )
+        })?;
+        map.clone()
+    };
 
-    let start: Point = payload.start.into();
-    let end: Point = payload.end.into();
+    let (start, end): (Point, Point) = params.into();
 
     // Check if start and end are not walls
     if !map_clone.validate_coordinates(start) {
@@ -191,7 +209,7 @@ async fn solve_map(
         ));
     }
 
-    if !map_clone.validate_coordinates(end)  {
+    if !map_clone.validate_coordinates(end) {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {

@@ -13,8 +13,9 @@ use axum::http::{
 };
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use tokio::net::TcpListener;
+use tokio::sync::RwLock;
 use tower_http::cors::CorsLayer;
 
 #[tokio::main]
