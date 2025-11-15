@@ -6,6 +6,9 @@ mod map_parser;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+mod handler_tests;
+
 use api::{create_api_router, MapStore};
 use axum::http::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
@@ -40,3 +43,5 @@ async fn main() {
 
     axum::serve(listener, app).await.unwrap();
 }
+
+

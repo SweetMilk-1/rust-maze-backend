@@ -16,11 +16,14 @@ impl Cell {
 
 impl fmt::Display for Map {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in &self.grid {
+        for (i, row) in self.grid.iter().enumerate() {
             for cell in row {
                 write!(f, "{}", cell.to_char())?;
             }
-            writeln!(f)?;
+            // Не добавляем новую строку после последней строки
+            if i < self.grid.len() - 1 {
+                writeln!(f)?;
+            }
         }
         Ok(())
     }

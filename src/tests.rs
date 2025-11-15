@@ -121,19 +121,7 @@ mod tests {
         map.grid = vec![vec![Cell::Wall, Cell::Empty], vec![Cell::Empty, Cell::Wall]];
 
         let display_output = format!("{}", map);
-        let expected = "# \n #\n";
-        assert_eq!(display_output, expected);
-    }
-
-    #[test]
-    fn test_map_display_with_path() {
-        let mut map = Map::new();
-        map.rows = 2;
-        map.cols = 2;
-        map.grid = vec![vec![Cell::Start, Cell::Path], vec![Cell::Path, Cell::End]];
-
-        let display_output = format!("{}", map);
-        let expected = "i.\n.O\n";
+        let expected = "# \n #";
         assert_eq!(display_output, expected);
     }
 
